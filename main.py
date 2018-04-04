@@ -2,6 +2,7 @@ import pdb
 import cv2
 import numpy as np
 import sys
+from paint import paint
 from matplotlib import pyplot as plt
 
 
@@ -16,6 +17,7 @@ def main():
 
         # read in the image
         image = cv2.imread(image_name, cv2.IMREAD_COLOR)
+        paint(image)
         # plt.imshow(image, cmap = 'gray', interpolation = 'bicubic')
 
     except FileNotSpecified:
