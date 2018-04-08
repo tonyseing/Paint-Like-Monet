@@ -31,13 +31,13 @@ def paint(image, brush_sizes=generateBrushSizes(2, 3, 2)):
         reference_image = referenceImage(image)
         canvas = paintLayer(canvas, reference_image, brush_size)
 
-"""
+
     cv2.imshow('image', reference_image)
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('image', 1200, 800)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-"""
+
 
 # defined in the paper as
 # "convolution  with a  Gaussian kernel of standard deviation f_sigma_R_i
@@ -62,6 +62,7 @@ def differenceImage(image1, image2):
 # Ri = brush_size
 # f_g = grid_step_size
 # f_sigma = blur factor
+# brush_size is the radius of the brush
 def paintLayer(canvas_image, reference_image, brush_size):
     # new strokes
     strokes = []
@@ -73,17 +74,18 @@ def paintLayer(canvas_image, reference_image, brush_size):
     rows, columns, _ = reference_image.shape
     for row in range(0, rows, grid_step_size):
       for column in range(0, columns, grid_step_size):
-        area_error, largest_error_point = sumError(row, column, grid_step_size)
+        area_error, largest_error_point = sumError(reference_image, column, row, grid_step_size)
         # if area_error is above the approximation threshold, paint a stroke at this point
         if area_error > approximation_threshold:
           x, y = largest_error_point
-          new_stroke = make_stroke(brush_size, x, y, reference_image)
+          new_stroke = makeStroke(brush_size, x, y, reference_image)
           strokes.append(new_stroke)
 
     paintRandomStrokes(canvas_image, strokes)
 
 def paintRandomStrokes(canvas, strokes):
     # randomize strokes
+    pdb.set_trace()
     paint_strokes = np.copy(strokes)
     shuffle(paint_strokes)
 
@@ -95,8 +97,8 @@ def makeStroke(brush_size, x, y, reference_image):
 
 # sum the error in the region near x,y
 def sumError(image, x, y, step):
-    M = neighborhood(image, x, y, step) 
-    error = np.zeros(M.shape[0], M.shape[1])
+    M = neighborhood(image, x, y, step)
+    error = np.zeros((M.shape[0], M.shape[1]))
     current_value = image[y][x]
     areaError = 0
     largest_error = 0
@@ -108,10 +110,13 @@ def sumError(image, x, y, step):
         blue, green, red = current_value
         m_blue, m_green, m_red = M[row][column]
         error = np.sqrt((m_blue-blue) ** 2 + (m_green-green) ** 2 + (m_red - red) ** 2)
-        if error > largest_error:
+        # clip the error
+        clipped_error = np.clip(error, 0, 255)
+
+        if clipped_error > largest_error:
             # new largest error found
-            largest_error_point = x, y
-            largest_error = error
+            largest_error_point = row, column
+            largest_error = clipped_error
 
         areaError += error
     return areaError, largest_error_point
