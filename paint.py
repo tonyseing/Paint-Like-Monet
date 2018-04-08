@@ -49,8 +49,7 @@ def referenceImage(image, kernel_size=5, f_sigma=100):
     return blurred_image
 
 def differenceImage(image1, image2):
-    pdb.set_trace()
-    difference = image1 - image2
+    difference = np.abs(image1 - image2)
     cv2.imshow('image', difference)
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('image', 1200, 800)
@@ -85,7 +84,6 @@ def paintLayer(canvas_image, reference_image, brush_size):
 
 def paintRandomStrokes(canvas, strokes):
     # randomize strokes
-    pdb.set_trace()
     paint_strokes = np.copy(strokes)
     shuffle(paint_strokes)
 
@@ -108,8 +106,9 @@ def sumError(image, x, y, step):
       for column in range(M.shape[1]):
         # find the area error between the current point in the subregion and our current value at x,y
         blue, green, red = current_value
-        m_blue, m_green, m_red = M[row][column]
-        error = np.sqrt((m_blue-blue) ** 2 + (m_green-green) ** 2 + (m_red - red) ** 2)
+        m_blue, m_green, m_red = M[row][column].astype(np.int32)
+        squared_total = (m_blue-blue) ** 2 + (m_green-green) ** 2 + (m_red - red) ** 2
+        error = np.sqrt(squared_total)
         # clip the error
         clipped_error = np.clip(error, 0, 255)
 

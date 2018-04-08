@@ -17,7 +17,7 @@ def main():
 
         # read in the image
         image = cv2.imread(image_name, cv2.IMREAD_COLOR)
-        paint(image)
+        painted_image = paint(image)
         # plt.imshow(image, cmap = 'gray', interpolation = 'bicubic')
 
     except FileNotSpecified:
