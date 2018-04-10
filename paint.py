@@ -76,47 +76,15 @@ def paintLayer(canvas_image, reference_image, brush_size):
     rows, columns, _ = reference_image.shape
     for row in range(0, rows, grid_step_size):
       for column in range(0, columns, grid_step_size):
-        area_error, largest_error_point = sumError(reference_image, column, row, grid_step_size)
+        area_error, largest_error_point_offset = sumError(reference_image, column, row, grid_step_size)
         # if area_error is above the approximation threshold, paint a stroke at this point
         if area_error > approximation_threshold:
-          x, y = largest_error_point
+          x, y = largest_error_point_offset[0] + column, largest_error_point_offset[1] + row
           color = reference_image[y][x]
           new_stroke = makeStroke(brush_size, x, y, color)
           strokes.append(new_stroke)
 
-    paintRandomStrokes(canvas_image, strokes)
-
-def paintRandomStrokes(canvas, strokes):
-    # randomize strokes
-    paint_strokes = np.copy(strokes)
-    shuffle(paint_strokes)
-
-    #todo, actually place the strokes on the canvas and return finished image
-    for stroke in range(len(paint_strokes)):
-        # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
-        canvas_image = paintStroke(canvas, paint_strokes[stroke])
-
-    return canvas
-
-# this doesn't edit the canvas, just encapsulates the information needed to create a stroke on a canvas later
-def makeStroke(brush_size, x, y, color):
-    stroke = { 'brush_size': brush_size, 'centroid': (x,y), 'color': color }
-    return stroke
-
-def paintStroke(canvas, stroke):
-    # passing thickness of -1 makes a filled circle
-    thickness = -1 
-    color = cv2.cv.Scalar(stroke['color'][0], stroke['color'][1], stroke['color'][2])
-    painted_canvas = np.copy(canvas)
-    cv2.circle(painted_canvas, stroke['centroid'], stroke['brush_size'], color, thickness)
-
-    cv2.imshow('image', painted_canvas)
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('image', 1200, 800)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    return painted_canvas
+    layer = paintRandomStrokes(canvas_image, strokes)
 
 # sum the error in the region near x,y
 def sumError(image, x, y, step):
@@ -145,10 +113,48 @@ def sumError(image, x, y, step):
         areaError += error
     return areaError, largest_error_point
 
-def neighborhood(image, x, y, step):
-    x_slice = slice(x-step/2, x+step/2)
-    y_slice = slice(y-step/2, y+step/2)
-    return image[x_slice, y_slice]
+def neighborhood(image, x, y, step_size):
+    neighborhood_limit = step_size / 2 
+    method = cv2.BORDER_REFLECT
+    padded_image = cv2.copyMakeBorder(image, neighborhood_limit, neighborhood_limit, neighborhood_limit,neighborhood_limit, method)
+
+    x_slice = slice(x - neighborhood_limit, x + neighborhood_limit)
+    y_slice = slice(y - neighborhood_limit, y + neighborhood_limit)
+    return padded_image[x_slice, y_slice]
+
+def paintRandomStrokes(canvas, strokes):
+    # randomize strokes
+    paint_strokes = np.copy(strokes)
+    shuffle(paint_strokes)
+    pdb.set_trace()
+    #todo, actually place the strokes on the canvas and return finished image
+    for stroke in range(len(paint_strokes)):
+        # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
+        canvas_image = paintStroke(canvas, paint_strokes[stroke])
+
+    return canvas_image
+
+# this doesn't edit the canvas, just encapsulates the information needed to create a stroke on a canvas later
+def makeStroke(brush_size, x, y, color):
+    stroke = { 'brush_size': brush_size, 'centroid': (x,y), 'color': color }
+    return stroke
+
+def paintStroke(canvas, stroke):
+    # passing thickness of -1 makes a filled circle
+    thickness = -1 
+    color = cv2.cv.Scalar(stroke['color'][0], stroke['color'][1], stroke['color'][2])
+    painted_canvas = np.copy(canvas)
+    cv2.circle(painted_canvas, stroke['centroid'], stroke['brush_size'], color, thickness)
+
+    cv2.imshow('image', painted_canvas)
+    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('image', 1200, 800)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    return painted_canvas
+
+
 
 def makeSplineStroke(x0, y0, R, reference_image):
     #
