@@ -32,11 +32,13 @@ def paint(image, brush_sizes=generateBrushSizes(2, 3, 2)):
         canvas = paintLayer(canvas, reference_image, brush_size)
 
 
+    """
     cv2.imshow('image', reference_image)
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('image', 1200, 800)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    """
 
 
 # defined in the paper as
@@ -50,12 +52,13 @@ def referenceImage(image, kernel_size=5, f_sigma=100):
 
 def differenceImage(image1, image2):
     difference = np.abs(image1 - image2)
+    """
     cv2.imshow('image', difference)
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('image', 1200, 800)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
+    """
     return difference
 
 # Ri = brush_size
@@ -77,7 +80,8 @@ def paintLayer(canvas_image, reference_image, brush_size):
         # if area_error is above the approximation threshold, paint a stroke at this point
         if area_error > approximation_threshold:
           x, y = largest_error_point
-          new_stroke = makeStroke(brush_size, x, y, reference_image)
+          color = reference_image[y][x]
+          new_stroke = makeStroke(brush_size, x, y, color)
           strokes.append(new_stroke)
 
     paintRandomStrokes(canvas_image, strokes)
@@ -88,10 +92,31 @@ def paintRandomStrokes(canvas, strokes):
     shuffle(paint_strokes)
 
     #todo, actually place the strokes on the canvas and return finished image
+    for stroke in range(len(paint_strokes)):
+        # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
+        canvas_image = paintStroke(canvas, paint_strokes[stroke])
+
+    return canvas
 
 # this doesn't edit the canvas, just encapsulates the information needed to create a stroke on a canvas later
-def makeStroke(brush_size, x, y, reference_image):
-    return reference_image
+def makeStroke(brush_size, x, y, color):
+    stroke = { 'brush_size': brush_size, 'centroid': (x,y), 'color': color }
+    return stroke
+
+def paintStroke(canvas, stroke):
+    # passing thickness of -1 makes a filled circle
+    thickness = -1 
+    color = cv2.cv.Scalar(stroke['color'][0], stroke['color'][1], stroke['color'][2])
+    painted_canvas = np.copy(canvas)
+    cv2.circle(painted_canvas, stroke['centroid'], stroke['brush_size'], color, thickness)
+
+    cv2.imshow('image', painted_canvas)
+    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('image', 1200, 800)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    return painted_canvas
 
 # sum the error in the region near x,y
 def sumError(image, x, y, step):
