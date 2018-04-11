@@ -31,14 +31,13 @@ def paint(image, brush_sizes=generateBrushSizes(2, 3, 2)):
         reference_image = referenceImage(image)
         canvas = paintLayer(canvas, reference_image, brush_size)
 
-
-    """
     cv2.imshow('image', reference_image)
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('image', 1200, 800)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    """
+
+    return canvas
 
 
 # defined in the paper as
@@ -52,13 +51,6 @@ def referenceImage(image, kernel_size=5, f_sigma=100):
 
 def differenceImage(image1, image2):
     difference = np.abs(image1 - image2)
-    """
-    cv2.imshow('image', difference)
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('image', 1200, 800)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    """
     return difference
 
 # Ri = brush_size
@@ -90,6 +82,7 @@ def paintLayer(canvas_image, reference_image, brush_size):
           strokes.append(new_stroke)
 
     layer = paintRandomStrokes(canvas_image, strokes)
+    return layer
 
 # sum the error in the region near x,y
 def sumError(difference_image, x, y, step):
@@ -105,7 +98,7 @@ def sumError(difference_image, x, y, step):
         # find the area error between the current point in the subregion in the blurred image and our canvas value
         blue_error = M[row][column][0].astype(np.int32)
         green_error = M[row][column][1].astype(np.int32)
-        red_error =M[row][column][2].astype(np.int32)
+        red_error = M[row][column][2].astype(np.int32)
         squared_total =  blue_error ** 2 + green_error ** 2 + red_error ** 2
         error = np.sqrt(squared_total)
 
@@ -150,12 +143,6 @@ def paintRandomStrokes(canvas, strokes):
         # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
         painted_canvas = paintStroke(painted_canvas, strokes[stroke_index])
 
-    cv2.imshow('image', painted_canvas)
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('image', 1200, 800)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
     return painted_canvas
 
 # this doesn't edit the canvas, just encapsulates the information needed to create a stroke on a canvas later
@@ -169,7 +156,6 @@ def paintStroke(canvas, stroke):
     color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
     painted_canvas = np.copy(canvas).astype(np.uint8)
     cv2.circle(painted_canvas, stroke['centroid'], stroke['brush_size'], color, thickness)
-
 
     return painted_canvas
 
