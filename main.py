@@ -18,6 +18,12 @@ def main():
         # read in the image
         image = cv2.imread(image_name, cv2.IMREAD_COLOR)
         painted_image = paint(image)
+        cv2.imshow('image', painted_image)
+        cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('image', 1200, 800)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
         # plt.imshow(image, cmap = 'gray', interpolation = 'bicubic')
 
     except FileNotSpecified:

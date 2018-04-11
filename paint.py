@@ -31,12 +31,6 @@ def paint(image, brush_sizes=generateBrushSizes(2, 3, 2)):
         reference_image = referenceImage(image)
         canvas = paintLayer(canvas, reference_image, brush_size)
 
-    cv2.imshow('image', reference_image)
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('image', 1200, 800)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
     return canvas
 
 
