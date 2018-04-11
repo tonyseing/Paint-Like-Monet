@@ -73,13 +73,18 @@ def paintLayer(canvas_image, reference_image, brush_size):
     difference_image = differenceImage(canvas_image, reference_image)
 
     grid_step_size = grid_size * brush_size
+    grid_half_step = grid_step_size // 2
     rows, columns, _ = reference_image.shape
+
     for row in range(0, rows, grid_step_size):
       for column in range(0, columns, grid_step_size):
-        area_error, largest_error_point_offset = sumError(reference_image, column, row, grid_step_size)
+        area_error, largest_error_point_offset = sumError(difference_image, column, row, grid_step_size)
+
         # if area_error is above the approximation threshold, paint a stroke at this point
         if area_error > approximation_threshold:
-          x, y = largest_error_point_offset[0] + column, largest_error_point_offset[1] + row
+          x, y = (largest_error_point_offset[0] + column - grid_half_step, largest_error_point_offset[1] + row - grid_half_step)
+          print x, y, grid_step_size, grid_half_step, largest_error_point_offset
+
           color = reference_image[y][x]
           new_stroke = makeStroke(brush_size, x, y, color)
           strokes.append(new_stroke)
@@ -87,47 +92,60 @@ def paintLayer(canvas_image, reference_image, brush_size):
     layer = paintRandomStrokes(canvas_image, strokes)
 
 # sum the error in the region near x,y
-def sumError(image, x, y, step):
-    M = neighborhood(image, x, y, step)
+def sumError(difference_image, x, y, step):
+    neighborhood_limit = step / 2
+    M = neighborhood(difference_image, x, y, neighborhood_limit)
     error = np.zeros((M.shape[0], M.shape[1]))
-    current_value = image[y][x]
-    areaError = 0
+    sum_error = 0
     largest_error = 0
-    largest_error_point = None
+    largest_error_point = neighborhood_limit, neighborhood_limit
 
-    for row in range(M.shape[0]):
-      for column in range(M.shape[1]):
-        # find the area error between the current point in the subregion and our current value at x,y
-        blue, green, red = current_value
-        m_blue, m_green, m_red = M[row][column].astype(np.int32)
-        squared_total = (m_blue-blue) ** 2 + (m_green-green) ** 2 + (m_red - red) ** 2
+    for row in range(0, M.shape[0]):
+      for column in range(0, M.shape[1]):
+        # find the area error between the current point in the subregion in the blurred image and our canvas value
+        blue_error = M[row][column][0].astype(np.int32)
+        green_error = M[row][column][1].astype(np.int32)
+        red_error =M[row][column][2].astype(np.int32)
+        squared_total =  blue_error ** 2 + green_error ** 2 + red_error ** 2
         error = np.sqrt(squared_total)
-        # clip the error
+
+        # ensure error falls between our valid color range
         clipped_error = np.clip(error, 0, 255)
 
-        if clipped_error > largest_error:
+        # is the point in our difference image or in our reflected border
+        M_center = (M.shape[0] // 2, M.shape[1] // 2)
+        original_x = x + column - M_center[1]
+        original_y = y + row - M_center[0]
+        is_row_within_bounds = original_y >= 0 and  original_y < difference_image.shape[1]
+        is_column_within_bounds = original_x >= 0 and  original_x < difference_image.shape[0]
+        within_image_bounds = is_row_within_bounds and is_column_within_bounds
+
+        if clipped_error > largest_error and within_image_bounds:
             # new largest error found
-            largest_error_point = row, column
+            largest_error_point = column, row
             largest_error = clipped_error
 
-        areaError += error
+        sum_error += error
+
+    areaError = sum_error / step ** 2
     return areaError, largest_error_point
 
-def neighborhood(image, x, y, step_size):
-    neighborhood_limit = step_size / 2 
+def neighborhood(image, x, y, neighborhood_limit):
+
     method = cv2.BORDER_REFLECT
     padded_image = cv2.copyMakeBorder(image, neighborhood_limit, neighborhood_limit, neighborhood_limit,neighborhood_limit, method)
 
+    padded_image = np.copy(image)
     x_slice = slice(x - neighborhood_limit, x + neighborhood_limit)
     y_slice = slice(y - neighborhood_limit, y + neighborhood_limit)
-    return padded_image[x_slice, y_slice]
+
+    return padded_image[y_slice, x_slice]
 
 def paintRandomStrokes(canvas, strokes):
     # randomize strokes
     paint_strokes = np.copy(strokes)
     shuffle(paint_strokes)
     pdb.set_trace()
-    #todo, actually place the strokes on the canvas and return finished image
     for stroke in range(len(paint_strokes)):
         # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
         canvas_image = paintStroke(canvas, paint_strokes[stroke])
