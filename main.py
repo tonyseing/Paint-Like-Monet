@@ -17,14 +17,18 @@ def main():
 
         # read in the image
         image = cv2.imread(image_name, cv2.IMREAD_COLOR)
+        # create the painting
         painted_image = paint(image)
+
+        # display it for testing
         cv2.imshow('image', painted_image)
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         cv2.resizeWindow('image', 1200, 800)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-        # plt.imshow(image, cmap = 'gray', interpolation = 'bicubic')
+        # write image to disk
+        cv2.imwrite('output.jpg', painted_image)
 
     except FileNotSpecified:
         print "Error: File not specified"
