@@ -83,7 +83,7 @@ def paintLayer(canvas_image, reference_image, brush_size):
         # if area_error is above the approximation threshold, paint a stroke at this point
         if area_error > approximation_threshold:
           x, y = (largest_error_point_offset[0] + column - grid_half_step, largest_error_point_offset[1] + row - grid_half_step)
-          print x, y, grid_step_size, grid_half_step, largest_error_point_offset
+          #print x, y, grid_step_size, grid_half_step, largest_error_point_offset
 
           color = reference_image[y][x]
           new_stroke = makeStroke(brush_size, x, y, color)
@@ -145,12 +145,18 @@ def paintRandomStrokes(canvas, strokes):
     # randomize strokes
     paint_strokes = np.copy(strokes)
     shuffle(paint_strokes)
-    pdb.set_trace()
-    for stroke in range(len(paint_strokes)):
+    painted_canvas = np.copy(canvas)
+    for stroke_index in range(len(paint_strokes)):
         # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
-        canvas_image = paintStroke(canvas, paint_strokes[stroke])
+        painted_canvas = paintStroke(painted_canvas, strokes[stroke_index])
 
-    return canvas_image
+    cv2.imshow('image', painted_canvas)
+    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('image', 1200, 800)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    return painted_canvas
 
 # this doesn't edit the canvas, just encapsulates the information needed to create a stroke on a canvas later
 def makeStroke(brush_size, x, y, color):
@@ -160,15 +166,10 @@ def makeStroke(brush_size, x, y, color):
 def paintStroke(canvas, stroke):
     # passing thickness of -1 makes a filled circle
     thickness = -1 
-    color = cv2.cv.Scalar(stroke['color'][0], stroke['color'][1], stroke['color'][2])
-    painted_canvas = np.copy(canvas)
+    color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
+    painted_canvas = np.copy(canvas).astype(np.uint8)
     cv2.circle(painted_canvas, stroke['centroid'], stroke['brush_size'], color, thickness)
 
-    cv2.imshow('image', painted_canvas)
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('image', 1200, 800)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
     return painted_canvas
 
