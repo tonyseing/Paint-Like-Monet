@@ -185,10 +185,11 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
 
       # stroke color is the color of the brush at our origin point
       reference_color = reference_image[current_y][current_x]
-      canvas_color = canvas_image[y0][x0]
+      canvas_color = canvas_image[current_y][current_x]
 
-      color_diff = differenceImage(reference_color, canvas_color)
-      stroke_diff = differenceImage(reference_color, stroke_color)
+      color_diff = differenceImage(grayImage(reference_image), grayImage(canvas_image))[current_y][current_x]
+      stroke_luminance = stroke_color[0] * 0.11 + stroke_color[1] * 0.59 + stroke_color[2] * 0.3
+      stroke_diff = np.abs(grayImage(reference_image)[current_y][current_x] - stroke_luminance)
 
       if i > MIN_STROKE_LENGTH and color_diff < stroke_diff:
           return stroke_points
@@ -196,9 +197,10 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
       # is this a vanishing gradient?
       # calculate Sobel-filtered luminance of the ref image
       kernel_size = 3
+      ddepth = cv2.CV_16S
       gray_reference_image = grayImage(reference_image)
-      gradient_x = cv2.Sobel(gray_reference_image, cv2.CV_32F, 1, 0, ksize=kernel_size)
-      gradient_y = cv2.Sobel(gray_reference_image, cv2.CV_32F, 0, 1, ksize=kernel_size)
+      gradient_x = cv2.Sobel(src=gray_reference_image, ddepth=ddepth, dx=1, dy=0, ksize=kernel_size)
+      gradient_y = cv2.Sobel(src=gray_reference_image, ddepth=ddepth, dx=0, dy=1, ksize=kernel_size)
       reference_gradient = gradient_x + gradient_y
 
       if reference_gradient[current_y][current_x] == 0:
@@ -215,7 +217,7 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
           gradient_normal = reverseNormal(gradient_normal)
 
       # impulse response filter (determines curviness of the stroke)
-      gradient_normal =  impulseResponseFilter(gradient_normal, last_normal, FILTER_CONSTANT)
+      gradient_normal = impulseResponseFilter(gradient_normal, last_normal, FILTER_CONSTANT)
       new_point = current_x + brush_size * gradient_normal[1], current_y + brush_size * gradient_normal[0]
       stroke_points.append(new_point)
 
@@ -232,9 +234,8 @@ def paintStroke(canvas, stroke):
     color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
     painted_canvas = np.copy(canvas).astype(np.uint8)
 
-
     for sp in stroke['points']:
-      cv2.circle(painted_canvas, sp, stroke['brush_size'], color, FILLED_CIRCLE)
+      cv2.circle(painted_canvas, np.array(sp, dtype=np.uint8), stroke['brush_size'], color, FILLED_CIRCLE)
 
     return painted_canvas
 
@@ -242,8 +243,8 @@ def paintStroke(canvas, stroke):
 # calculates the luminance of a color image using the formula provided by hertzmann
 def grayImage(image):
     # "The luminance of a pixel is computed with L(r,g,b) = 0.30*r + 0.59*g + 0.11*b"
-    gray_image = np.zeros((height, width), dtype=np.uint8)
-    b, g, r = image
+    gray_image = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+    b, g, r = cv2.split(image)
     gray_image =  0.3 * r + 0.59 * g + 0.11 * b
     return gray_image
 
@@ -255,7 +256,7 @@ def calculateNormal(gradient):
 
 # flip a normal 180 degrees
 def reverseNormalDirection(normal):
-    return -1 * gradient_normal
+    return -1 * normal
 
 
 # impulse response filter (determines curviness of the stroke) and limits speckled appearance of short strokes
@@ -263,8 +264,7 @@ def reverseNormalDirection(normal):
 def impulseResponseFilter(normal, last_normal, fc):
     normal = fc * normal + (1 - fc) * last_normal
     normal_y, normal_x = normal
-    filtered_normal = np.sqrt(normal_x ** 2 + normal_y ** 2)
+    filtered_normal = normal / np.sqrt(normal_x ** 2 + normal_y ** 2)
     return filtered_normal
-
 
 

@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 
 # methods
 # need to abstract this out into a constants file
-DOTTED = 0
+DOTTED_STROKE = 0
 CURVED_STROKE = 1
 
 def main():
@@ -26,7 +26,7 @@ def main():
         image = cv2.imread(image_name, cv2.IMREAD_COLOR)
 
         # create the painting
-        painted_image = paint(image, DOTTED)
+        painted_image = paint(image, CURVED_STROKE)
 
         # display it for testing
         """
