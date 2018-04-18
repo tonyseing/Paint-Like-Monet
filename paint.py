@@ -151,60 +151,21 @@ def neighborhood(image, x, y, neighborhood_limit):
     return padded_image[y_slice, x_slice]
 
 
-def paintRandomStrokes(canvas, strokes, method):
+def paintRandomStrokes(canvas, strokes, method=DOTTED):
     # randomize strokes
     paint_strokes = np.copy(strokes)
     shuffle(paint_strokes)
     painted_canvas = np.copy(canvas)
     for stroke_index in range(len(paint_strokes)):
-        # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
-        painted_canvas = paintStroke(painted_canvas, strokes[stroke_index])
+      # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
+      painted_canvas = paintStroke(painted_canvas, strokes[stroke_index])
 
     return painted_canvas
 
 # this doesn't edit the canvas, just encapsulates the information needed to create a stroke on a canvas later
 def makeDottedStroke(brush_size, x, y, color):
-    stroke = { 'brush_size': brush_size, 'centroid': (x,y), 'color': color }
+    stroke = { 'brush_size': brush_size, 'points': [(x,y)], 'color': color }
     return stroke
-
-
-def paintStroke(canvas, stroke):
-    # passing thickness of -1 makes a filled circle
-    thickness = -1
-    color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
-    painted_canvas = np.copy(canvas).astype(np.uint8)
-    cv2.circle(painted_canvas, stroke['centroid'], stroke['brush_size'], color, thickness)
-
-    return painted_canvas
-
-
-# calculates the luminance of a color image using the formula provided by hertzmann
-def grayImage(image):
-    # "The luminance of a pixel is computed with L(r,g,b) = 0.30*r + 0.59*g + 0.11*b"
-    gray_image = np.zeros((height, width), dtype=np.uint8)
-    b, g, r = image
-    gray_image =  0.3 * r + 0.59 * g + 0.11 * b
-    return gray_image
-
-
-# calculate a normal
-def calculateNormal(gradient):
-    return -1 * gradient[1], gradient[0]
-
-
-# flip a normal 180 degrees
-def reverseNormalDirection(normal):
-    return -1 * gradient_normal
-
-
-# impulse response filter (determines curviness of the stroke) and limits speckled appearance of short strokes
-# filters the stroke direction
-def impulseResponseFilter(normal, last_normal, fc):
-    normal = fc * normal + (1 - fc) * last_normal
-    normal_y, normal_x = normal
-    filtered_normal = np.sqrt(normal_x ** 2 + normal_y ** 2)
-    return filtered_normal
-
 
 def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
     # our K value in the paper
@@ -217,12 +178,13 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
     # our (x,y) point referenced in the paper
     current_x, current_y = (x0, y0)
 
-    # stroke color is the color of the brush at our origin point
-    stroke_color = reference_image[y0][x0]
+     # "the color of the reference image at (x0, y0) is the color of the spline"
+    stroke_color = reference_image[y0][x0] 
 
     for i in range(1, MAX_STROKE_LENGTH):
-      # "the color of the reference image at (x0, y0) is the color of the spline"
-      reference_color = reference_image[y0][x0]
+
+      # stroke color is the color of the brush at our origin point
+      reference_color = reference_image[current_y][current_x]
       canvas_color = canvas_image[y0][x0]
 
       color_diff = differenceImage(reference_color, canvas_color)
@@ -260,4 +222,49 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
       # remember this normal for the impulse response filter calculation next iteration
       last_normal = gradient_normal
 
-    return stroke_points
+      stroke = { 'brush_size': brush_size, 'points': stroke_points, 'color': stroke_color }
+
+    return stroke
+
+def paintStroke(canvas, stroke):
+    # passing thickness of -1 makes a filled circle
+    FILLED_CIRCLE = -1
+    color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
+    painted_canvas = np.copy(canvas).astype(np.uint8)
+
+
+    for sp in stroke['points']:
+      cv2.circle(painted_canvas, sp, stroke['brush_size'], color, FILLED_CIRCLE)
+
+    return painted_canvas
+
+
+# calculates the luminance of a color image using the formula provided by hertzmann
+def grayImage(image):
+    # "The luminance of a pixel is computed with L(r,g,b) = 0.30*r + 0.59*g + 0.11*b"
+    gray_image = np.zeros((height, width), dtype=np.uint8)
+    b, g, r = image
+    gray_image =  0.3 * r + 0.59 * g + 0.11 * b
+    return gray_image
+
+
+# calculate a normal
+def calculateNormal(gradient):
+    return -1 * gradient[1], gradient[0]
+
+
+# flip a normal 180 degrees
+def reverseNormalDirection(normal):
+    return -1 * gradient_normal
+
+
+# impulse response filter (determines curviness of the stroke) and limits speckled appearance of short strokes
+# filters the stroke direction
+def impulseResponseFilter(normal, last_normal, fc):
+    normal = fc * normal + (1 - fc) * last_normal
+    normal_y, normal_x = normal
+    filtered_normal = np.sqrt(normal_x ** 2 + normal_y ** 2)
+    return filtered_normal
+
+
+
