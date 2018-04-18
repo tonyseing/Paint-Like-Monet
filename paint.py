@@ -4,9 +4,10 @@ import pdb
 from random import shuffle
 
 #constants # f_g
-grid_size = 1
+GRID_SIZE = 1
+
 # T appoximation_threshold = 100 brush sizes expressed in radii
-approximation_threshold = 100
+APPROXIMATION_THRESHOLD = 100
 
 # maximum curved stroke length
 MIN_STROKE_LENGTH = 1
@@ -14,6 +15,10 @@ MAX_STROKE_LENGTH = 10
 
 # filter constant to limit or exaggerate brush stroke
 FILTER_CONSTANT = 1
+
+# methods
+DOTTED = 0
+CURVED_STROKE = 1
 
 # "Rather than requiring the user to provide a list of brush sizes,
 # we found it more useful to use three parameters to specify brush sizes: smallest brush radius R1, number of brushes, and size ratio (Ri+1/Ri)
@@ -26,7 +31,7 @@ def generateBrushSizes(smallest_radius, num_brushes, size_ratio):
         brush_sizes.append(last_brush * size_ratio)
     return brush_sizes
 
-def paint(image, brush_sizes=generateBrushSizes(2, 3, 2)):
+def paint(image, method, brush_sizes=generateBrushSizes(2, 3, 2)):
     # ensure brush sizes are ordered biggest to smallest
     sorted_brush_sizes = sorted(brush_sizes, reverse=True)
 
@@ -34,7 +39,7 @@ def paint(image, brush_sizes=generateBrushSizes(2, 3, 2)):
     canvas = np.zeros(image.shape)
     for brush_size in sorted_brush_sizes:
         reference_image = referenceImage(image)
-        canvas = paintLayer(canvas, reference_image, brush_size)
+        canvas = paintLayer(canvas, reference_image, brush_size, method)
 
     return canvas
 
@@ -58,14 +63,14 @@ def differenceImage(image1, image2):
 # f_g = grid_step_size
 # f_sigma = blur factor
 # brush_size is the radius of the brush
-def paintLayer(canvas_image, reference_image, brush_size):
+def paintLayer(canvas_image, reference_image, brush_size, method):
     # new strokes
     strokes = []
 
     # create a pointwise difference image
     difference_image = differenceImage(canvas_image, reference_image)
 
-    grid_step_size = grid_size * brush_size
+    grid_step_size = GRID_SIZE * brush_size
     grid_half_step = grid_step_size // 2
     rows, columns, _ = reference_image.shape
 
@@ -74,15 +79,23 @@ def paintLayer(canvas_image, reference_image, brush_size):
         area_error, largest_error_point_offset = sumError(difference_image, column, row, grid_step_size)
 
         # if area_error is above the approximation threshold, paint a stroke at this point
-        if area_error > approximation_threshold:
+        if area_error > APPROXIMATION_THRESHOLD:
           x, y = (largest_error_point_offset[0] + column - grid_half_step, largest_error_point_offset[1] + row - grid_half_step)
           #print x, y, grid_step_size, grid_half_step, largest_error_point_offset
 
           color = reference_image[y][x]
-          new_stroke = makeStroke(brush_size, x, y, color)
+
+          # if method was set to curved stroke
+          if method == CURVED_STROKE:
+              new_stroke = makeCurvedStroke(brush_size, x, y, reference_image, canvas_image)
+
+          # otherwise we are using the dotted stroke
+          else:
+              new_stroke = makeDottedStroke(brush_size, x, y, color)
+
           strokes.append(new_stroke)
 
-    layer = paintRandomStrokes(canvas_image, strokes)
+    layer = paintRandomStrokes(canvas_image, strokes, method)
     return layer
 
 
@@ -138,7 +151,7 @@ def neighborhood(image, x, y, neighborhood_limit):
     return padded_image[y_slice, x_slice]
 
 
-def paintRandomStrokes(canvas, strokes):
+def paintRandomStrokes(canvas, strokes, method):
     # randomize strokes
     paint_strokes = np.copy(strokes)
     shuffle(paint_strokes)
@@ -150,7 +163,7 @@ def paintRandomStrokes(canvas, strokes):
     return painted_canvas
 
 # this doesn't edit the canvas, just encapsulates the information needed to create a stroke on a canvas later
-def makeStroke(brush_size, x, y, color):
+def makeDottedStroke(brush_size, x, y, color):
     stroke = { 'brush_size': brush_size, 'centroid': (x,y), 'color': color }
     return stroke
 

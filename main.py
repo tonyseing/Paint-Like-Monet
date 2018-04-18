@@ -6,7 +6,10 @@ from paint import paint
 from matplotlib import pyplot as plt
 
 
-
+# methods
+# need to abstract this out into a constants file
+DOTTED = 0
+CURVED_STROKE = 1
 
 def main():
     try:
@@ -21,8 +24,9 @@ def main():
 
         # read in the image
         image = cv2.imread(image_name, cv2.IMREAD_COLOR)
+
         # create the painting
-        painted_image = paint(image)
+        painted_image = paint(image, DOTTED)
 
         # display it for testing
         """
