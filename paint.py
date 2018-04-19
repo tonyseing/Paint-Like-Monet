@@ -12,7 +12,7 @@ APPROXIMATION_THRESHOLD = 100
 
 # maximum curved stroke length
 MIN_STROKE_LENGTH = 1
-MAX_STROKE_LENGTH = 5
+MAX_STROKE_LENGTH = 16
 
 # filter constant to limit or exaggerate brush stroke
 FILTER_CONSTANT = 1
