@@ -3,6 +3,7 @@ import numpy as np
 import pdb
 from random import shuffle
 
+
 #constants # f_g
 GRID_SIZE = 1
 
@@ -11,7 +12,7 @@ APPROXIMATION_THRESHOLD = 100
 
 # maximum curved stroke length
 MIN_STROKE_LENGTH = 1
-MAX_STROKE_LENGTH = 10
+MAX_STROKE_LENGTH = 5
 
 # filter constant to limit or exaggerate brush stroke
 FILTER_CONSTANT = 1
@@ -95,7 +96,8 @@ def paintLayer(canvas_image, reference_image, brush_size, method):
 
           strokes.append(new_stroke)
 
-    layer = paintRandomStrokes(canvas_image, strokes, method)
+    layer = paintRandomStrokes(canvas_image, strokes)
+
     return layer
 
 
@@ -151,14 +153,14 @@ def neighborhood(image, x, y, neighborhood_limit):
     return padded_image[y_slice, x_slice]
 
 
-def paintRandomStrokes(canvas, strokes, method=DOTTED):
+def paintRandomStrokes(canvas, strokes):
     # randomize strokes
     paint_strokes = np.copy(strokes)
     shuffle(paint_strokes)
     painted_canvas = np.copy(canvas)
-    for stroke_index in range(len(paint_strokes)):
+    for stroke in paint_strokes:
       # takes a canvas and a paintbrush, and returns the canvas passed with the new stroke painted
-      painted_canvas = paintStroke(painted_canvas, strokes[stroke_index])
+      painted_canvas = paintStroke(painted_canvas, stroke)
 
     return painted_canvas
 
@@ -192,7 +194,7 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
       stroke_diff = np.abs(grayImage(reference_image)[current_y][current_x] - stroke_luminance)
 
       if i > MIN_STROKE_LENGTH and color_diff < stroke_diff:
-          return stroke_points
+         break 
 
       # is this a vanishing gradient?
       # calculate Sobel-filtered luminance of the ref image
@@ -204,7 +206,7 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
       reference_gradient = gradient_x + gradient_y
 
       if reference_gradient[current_y][current_x] == 0:
-        return stroke_points
+        break
 
       # calculate the unit vector of the gradient at the current point
       gradient_unit_vector = gradient_x[current_y][current_x], gradient_y[current_y][current_x]
@@ -224,18 +226,30 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
       # remember this normal for the impulse response filter calculation next iteration
       last_normal = gradient_normal
 
-      stroke = { 'brush_size': brush_size, 'points': stroke_points, 'color': stroke_color }
+    stroke = { 'brush_size': brush_size, 'points': stroke_points, 'color': stroke_color }
 
     return stroke
+
 
 def paintStroke(canvas, stroke):
     # passing thickness of -1 makes a filled circle
     FILLED_CIRCLE = -1
-    color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
+    # color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
+
+    #bug
+    # for some reason, stroke looks like [(8, 99)] instead of {} and causes the program to crash
+
+    color = (int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
+
     painted_canvas = np.copy(canvas).astype(np.uint8)
 
     for sp in stroke['points']:
-      cv2.circle(painted_canvas, np.array(sp, dtype=np.uint8), stroke['brush_size'], color, FILLED_CIRCLE)
+      centroid = (int(sp[0]), int(sp[1]))
+      #print centroid
+      #print stroke['brush_size']
+      #print color
+      # print 
+      cv2.circle(painted_canvas, centroid, stroke['brush_size'], color, FILLED_CIRCLE)
 
     return painted_canvas
 
