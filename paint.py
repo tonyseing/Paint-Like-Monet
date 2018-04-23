@@ -15,7 +15,7 @@ MIN_STROKE_LENGTH = 1
 MAX_STROKE_LENGTH = 16
 
 # filter constant to limit or exaggerate brush stroke
-FILTER_CONSTANT = 1
+FILTER_CONSTANT = 0.1
 
 # methods
 DOTTED = 0
@@ -50,7 +50,7 @@ def paint(image, method, brush_sizes=generateBrushSizes(2, 3, 2)):
 # where f_sigma is some constant factor
 # todo: find kernel size, f_sigma
 # f_sigma = blur factor
-def referenceImage(image, kernel_size=5, f_sigma=100):
+def referenceImage(image, kernel_size=3, f_sigma=30):
     blurred_image = cv2.GaussianBlur(image, (kernel_size, kernel_size), sigmaX=f_sigma, sigmaY=f_sigma)
     return blurred_image
 
@@ -70,6 +70,7 @@ def paintLayer(canvas_image, reference_image, brush_size, method):
 
     # create a pointwise difference image
     difference_image = differenceImage(canvas_image, reference_image)
+    cv2.imwrite('difference_image' + str(brush_size) + '.jpg', difference_image)
 
     grid_step_size = GRID_SIZE * brush_size
     grid_half_step = grid_step_size // 2
@@ -97,6 +98,7 @@ def paintLayer(canvas_image, reference_image, brush_size, method):
           strokes.append(new_stroke)
 
     layer = paintRandomStrokes(canvas_image, strokes)
+    cv2.imwrite('layer' + str(brush_size) + '.jpg', layer)
 
     return layer
 
@@ -108,7 +110,7 @@ def sumError(difference_image, x, y, step):
     error = np.zeros((M.shape[0], M.shape[1]))
     sum_error = 0
     largest_error = 0
-    largest_error_point = neighborhood_limit, neighborhood_limit
+    largest_error_point = 0, 0
 
     for row in range(0, M.shape[0]):
       for column in range(0, M.shape[1]):
@@ -183,7 +185,7 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
      # "the color of the reference image at (x0, y0) is the color of the spline"
     stroke_color = reference_image[y0][x0] 
 
-    for i in range(1, MAX_STROKE_LENGTH):
+    for i in range(1, MAX_STROKE_LENGTH+1):
 
       # stroke color is the color of the brush at our origin point
       reference_color = reference_image[current_y][current_x]
@@ -234,10 +236,6 @@ def makeCurvedStroke(brush_size, x0, y0, reference_image, canvas_image):
 def paintStroke(canvas, stroke):
     # passing thickness of -1 makes a filled circle
     FILLED_CIRCLE = -1
-    # color = cv2.cv.Scalar(int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
-
-    #bug
-    # for some reason, stroke looks like [(8, 99)] instead of {} and causes the program to crash
 
     color = (int(stroke['color'][0]), int(stroke['color'][1]), int(stroke['color'][2]))
 
@@ -245,10 +243,6 @@ def paintStroke(canvas, stroke):
 
     for sp in stroke['points']:
       centroid = (int(sp[0]), int(sp[1]))
-      #print centroid
-      #print stroke['brush_size']
-      #print color
-      # print 
       cv2.circle(painted_canvas, centroid, stroke['brush_size'], color, FILLED_CIRCLE)
 
     return painted_canvas
@@ -276,7 +270,8 @@ def reverseNormalDirection(normal):
 # impulse response filter (determines curviness of the stroke) and limits speckled appearance of short strokes
 # filters the stroke direction
 def impulseResponseFilter(normal, last_normal, fc):
-    normal = fc * normal + (1 - fc) * last_normal
+    normal = np.array(normal)
+    normal = fc * normal + (1 - fc) * np.array(last_normal)
     normal_y, normal_x = normal
     filtered_normal = normal / np.sqrt(normal_x ** 2 + normal_y ** 2)
     return filtered_normal

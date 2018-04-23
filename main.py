@@ -1,9 +1,8 @@
-import pdb
+#import pdb
 import cv2
 import numpy as np
 import sys
 from paint import paint
-from matplotlib import pyplot as plt
 
 
 # methods
@@ -27,15 +26,6 @@ def main():
 
         # create the painting
         painted_image = paint(image, CURVED_STROKE)
-
-        # display it for testing
-        """
-        cv2.imshow('image', painted_image)
-        cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('image', 1200, 800)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        """
 
         # write image to disk
         cv2.imwrite(output_name, painted_image)
