@@ -19,10 +19,10 @@ This pipeline creates paintings from photographs by painting successive layers o
 
 The pipeline starts by creating an empty canvas image which is all black, for us to project our impressionist painting onto using Numpy’s np.zeros method. The input image is then convolved over with a Gaussian kernel, via OpenCv’s GaussianBlur method with a reflected border, the output of which will be our reference image when “painting” onto the canvas. 
 
-Reference image delta by layer
+Reference image delta by layer  
 <img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/painting_by_layer.png?raw=true" width="550" />
 
-Painting the final image in different stroke sizes by layer
+Painting the final image in different stroke sizes by layer  
 <img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/image_differences_paint.png?raw=true" width="550" />
 
 Brush sizes for our painting are generated based on our smallest radius passed, number of brushes, and the size ratio between successively larger brushes. Input of three brushes, smallest being 1 pixel, and a size ratio of two generates brush sizes of 1, 2, and 4. The Hertzmann paper recommends sizes of 2, 4, and 8 for creating Impressionist-style paintings, so those are the sizes used in this pipeline.
