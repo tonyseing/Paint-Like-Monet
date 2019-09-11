@@ -1,4 +1,4 @@
-# painterly-rendering
+# Paint like humans
 
 ### Required libraries
 * OpenCV
