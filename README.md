@@ -1,4 +1,4 @@
-# Paint like humans
+# Paint Like Monet
 
 ### Required libraries
 * OpenCV
