@@ -7,6 +7,11 @@
 ### Objective
 The goal of this project was to write a software to generate non-photorealistic rendered images from photograph inputs. The application takes a photograph file as input and outputs an Impressionist-like image.
 
+### Examples
+![](https://github.com/tonyseing/Paint-Like-Monet/blob/master/output/amy_window.jpg?raw=true)
+
+
+
 ### Pipeline
 This pipeline creates paintings from photographs by painting successive layers of curved brush strokes using a variety of brush stroke sizes.
 
