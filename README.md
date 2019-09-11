@@ -8,6 +8,8 @@
 The goal of this project was to write a software to generate non-photorealistic rendered images from photograph inputs. The application takes a photograph file as input and outputs an Impressionist-like image.
 
 ### Examples
+<img art="Two examples of Impressionist renderings from Hertzman's paper" src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/hertzman_impressionist.png?raw=true" width="600" />
+
 <img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/output/amy_window.jpg?raw=true" width="300" />
 <img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/output/MIA.jpg?raw=true" width="300" />
 
