@@ -10,6 +10,8 @@ The goal of this project was to write a software to generate non-photorealistic 
 ### Examples
 ![](https://github.com/tonyseing/Paint-Like-Monet/blob/master/output/amy_window.jpg?raw=true)
 
+![](https://github.com/tonyseing/Paint-Like-Monet/blob/master/output/MIA.jpg?raw=true)
+
 
 
 ### Pipeline
