@@ -35,14 +35,9 @@ The program then randomizes the order of stored list of strokes generated. This 
 The process of opening the files and writing them to disk are performed by the user when he/she runs the program from the command line. The two inputs are the file source location, and the target file location. These are the two manual inputs and the running of the controlling main.py script is the manual portion of the code as it requires the user’s input and actions. 
 
 ### Resources
-Overview of painterly rendering methods: http://www.mrl.nyu.edu/publications/hertzmann-thesis/hertzmann-thesis-300dpi.pdf
-Painterly Rendering talk: https://www.youtube.com/watch?v=ZmV5gxfQX9E
-Painterly rendering using curved brush strokes: https://www.mrl.nyu.edu/publications/painterly98/hertzmann-siggraph98.pdf
-“Raising exceptions in python”: https://docs.python.org/3.3/tutorial/errors.html#raising-exceptions
-System arguments: http://www.pythonforbeginners.com/system/python-sys-argv
-Smoothing images: https://docs.opencv.org/3.1.0/d4/d13/tutorial_py_filtering.html
-Gaussian Blur: https://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html#void%20GaussianBlur(InputArray%20src,%20OutputArray%20dst,%20Size%20ksize,%20double%20sigmaX,%20double%20sigmaY,%20int%20borderType)
-Image slices: https://stackoverflow.com/questions/30317690/how-to-extract-a-sub-array-in-numpy-efficiently
-Copy border: https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_core/py_basic_ops/py_basic_ops.html
-Cv2.circle color  type: https://stackoverflow.com/questions/34956828/typeerror-scalar-value-for-argument-color-is-not-numeric-in-opencv
+Overview of painterly rendering methods: http://www.mrl.nyu.edu/publications/hertzmann-thesis/hertzmann-thesis-300dpi.pdf  
+Painterly Rendering talk: https://www.youtube.com/watch?v=ZmV5gxfQX9E  
+Painterly rendering using curved brush strokes: https://www.mrl.nyu.edu/publications/painterly98/hertzmann-siggraph98.pdf  
+Smoothing images: https://docs.opencv.org/3.1.0/d4/d13/tutorial_py_filtering.html  
+Gaussian Blur: https://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html#void%20GaussianBlur(InputArray%20src,%20OutputArray%20dst,%20Size%20ksize,%20double%20sigmaX,%20double%20sigmaY,%20int%20borderType)  
 Calculating phase: https://stackoverflow.com/questions/38961957/cv2-phase-gives-the-angle-in-radian
