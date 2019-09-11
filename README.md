@@ -17,7 +17,10 @@ This pipeline creates paintings from photographs by painting successive layers o
 
 The pipeline starts by creating an empty canvas image which is all black, for us to project our impressionist painting onto using Numpy’s np.zeros method. The input image is then convolved over with a Gaussian kernel, via OpenCv’s GaussianBlur method with a reflected border, the output of which will be our reference image when “painting” onto the canvas. 
 
-<img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/painting_by_layer.png?raw=true" width="400" />
+<img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/image_differences_paint.png?raw=true" width="550" />
+
+
+<img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/painting_by_layer.png?raw=true" width="550" />
 
 Brush sizes for our painting are generated based on our smallest radius passed, number of brushes, and the size ratio between successively larger brushes. Input of three brushes, smallest being 1 pixel, and a size ratio of two generates brush sizes of 1, 2, and 4. The Hertzmann paper recommends sizes of 2, 4, and 8 for creating Impressionist-style paintings, so those are the sizes used in this pipeline.
 
@@ -25,8 +28,6 @@ Brush sizes for our painting are generated based on our smallest radius passed, 
 <img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/painting_a_brush_stroke.png?raw=true" width="250" />
 
 The program now paints on a number of layers onto our canvas, equal to the number of brush sizes, of the reference image by creating grid points proportional to size of the paint brushes. We create a delta, or difference image, between the reference image and our canvas. Iterating over the grid points over our difference image, the application chooses one point in a region near each grid point with the greatest error, N, and if N’s error is greater than a threshold value, T, I have predetermined, add N’s coordinates to a set of initial brush strokes for this paint layer. This threshold value, T, prevents prevents over-painting areas with a small difference between the reference image and the canvas.
-
-<img src="https://github.com/tonyseing/Paint-Like-Monet/blob/master/analysis/image_differences_paint.png?raw=true" width="250" />
 
 
 The application reflects the border for points near the edges of the image when calculating neighborhood error. Now, the pipeline randomizes the brush strokes stored for the layer. This is done to prevent creating a uniform appearance in our output. The application then iterates through our stored strokes, and use each stroke’s origin point to begin applying the brush strokes to the canvas. The point stored for each stroke serves as a centroid for the circle point applied to the canvas. The program calculates subsequent points on this brush stroke by calculating the gradient normal at each point, and placing the next point along the angle of the normal, at the distance of the brush radius away. There are two possible gradient normals. The one chosen is the normal that smaller or equal to pi/2. 
